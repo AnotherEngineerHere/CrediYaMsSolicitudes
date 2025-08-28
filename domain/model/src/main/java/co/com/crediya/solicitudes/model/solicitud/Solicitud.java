@@ -1,14 +1,22 @@
 package co.com.crediya.solicitudes.model.solicitud;
-import lombok.Builder;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-//import lombok.NoArgsConstructor;
-import lombok.Setter;
+
+import co.com.crediya.solicitudes.model.estados.Estado;
+import co.com.crediya.solicitudes.model.tipoprestamo.TipoPrestamo;
+import lombok.*;
+
+import java.math.BigDecimal;
 
 @Getter
 @Setter
-//@NoArgsConstructor
-@AllArgsConstructor
 @Builder(toBuilder = true)
+@NoArgsConstructor
+@AllArgsConstructor
 public class Solicitud {
+    private Integer idSolicitud;
+    private BigDecimal monto;
+    private Integer plazo;               
+    private String email;                
+    private Estado estado;               
+    private TipoPrestamo tipoPrestamo;   
+    private String documentoIdentidad;   
 }

@@ -1,30 +1,23 @@
 package co.com.crediya.solicitudes.model.estados;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import co.com.crediya.solicitudes.model.enums.EstadoTipo;
+import lombok.*;
 
-import java.math.BigDecimal;
-
-// =============================
-//  Clase: Estado
-// =============================
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Estados {
+public class Estado {
     private Integer idEstado;
-    private String nombre;
+    private EstadoTipo tipo;
     private String descripcion;
 
-    public static Estados pendienteRevision() {
-        return Estados.builder()
-                .nombre("Pendiente de revisión")
-                .descripcion("Solicitud registrada y pendiente de validación manual o automática")
+    public static Estado creada() {
+        return Estado.builder()
+                .idEstado(EstadoTipo.CREADA.getId())
+                .tipo(EstadoTipo.CREADA)
+                .descripcion(EstadoTipo.CREADA.getDescripcion())
                 .build();
     }
 }

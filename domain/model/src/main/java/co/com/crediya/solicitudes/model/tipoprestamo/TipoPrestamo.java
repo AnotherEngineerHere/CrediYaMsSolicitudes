@@ -1,14 +1,27 @@
 package co.com.crediya.solicitudes.model.tipoprestamo;
-import lombok.Builder;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-//import lombok.NoArgsConstructor;
-import lombok.Setter;
+
+import lombok.*;
+
+import java.math.BigDecimal;
 
 @Getter
 @Setter
-//@NoArgsConstructor
+@Builder
+@NoArgsConstructor
 @AllArgsConstructor
-@Builder(toBuilder = true)
 public class TipoPrestamo {
+    private Integer idTipoPrestamo;
+    private String nombre;
+    private BigDecimal montoMinimo;
+    private BigDecimal montoMaximo;
+    private BigDecimal tasaInteres; // % ej: 12.5
+    private boolean validacionAutomatica;
+
+    public boolean esMontoValido(BigDecimal monto) {
+        return monto != null
+                && montoMinimo != null
+                && montoMaximo != null
+                && monto.compareTo(montoMinimo) >= 0
+                && monto.compareTo(montoMaximo) <= 0;
+    }
 }
