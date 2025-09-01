@@ -15,9 +15,9 @@ public class Estado {
 
     public static Estado creada() {
         return Estado.builder()
-                .idEstado(EstadoTipo.CREADA.getId())
-                .tipo(EstadoTipo.CREADA)
-                .descripcion(EstadoTipo.CREADA.getDescripcion())
+                .idEstado(EstadoTipo.EN_REVISION.getId())
+                .tipo(EstadoTipo.EN_REVISION)
+                .descripcion(EstadoTipo.EN_REVISION.getDescripcion())
                 .build();
     }
 }
