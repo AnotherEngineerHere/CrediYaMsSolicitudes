@@ -1,16 +1,10 @@
 server:
-  port: 8080
+  port: 8082
 spring:
   application:
     name: "CrediYaMsSolictudes"
   devtools:
     add-properties: false
-  h2:
-    console:
-      enabled: true
-      path: "/h2"
-  profiles:
-    include: null
 management:
   endpoints:
     web:
@@ -22,3 +16,14 @@ management:
         enabled: true
 cors:
   allowed-origins: "http://localhost:4200,http://localhost:8080"
+adapters:
+  r2dbc:
+    host: localhost
+    port: 5432
+    database: crediya
+    schema: core
+    username: admin
+    password: admin123
+logging:
+  level:
+    org.springframework.data.r2dbc: DEBUG
