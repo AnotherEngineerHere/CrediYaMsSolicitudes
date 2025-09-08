@@ -1,13 +1,14 @@
 package co.com.crediya.solicitudes.api;
 
-import co.com.crediya.solicitudes.api.dto.RegistrarSolicitudRequest;
-import co.com.crediya.solicitudes.api.dto.SolicitudResponse;
+import co.com.crediya.solicitudes.api.dto.*;
 import co.com.crediya.solicitudes.model.excepciones.*;
 import co.com.crediya.solicitudes.model.solicitud.FiltroSolicitud;
 import co.com.crediya.solicitudes.model.solicitud.PageQuery;
 import co.com.crediya.solicitudes.usecase.solicitud.ListSolicitudesPendientesUseCase;
 import co.com.crediya.solicitudes.usecase.solicitud.SolicitudUseCase;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -35,6 +36,7 @@ public class SolicitudHandler {
 
     private final ListSolicitudesPendientesUseCase useCase;
 
+    private static final Logger log = LoggerFactory.getLogger(SolicitudHandler.class);
     /**
      * Maneja la creación de una nueva solicitud de crédito.
      *
