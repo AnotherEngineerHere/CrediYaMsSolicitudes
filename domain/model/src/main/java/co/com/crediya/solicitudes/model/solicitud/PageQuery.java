@@ -1,4 +1,4 @@
-package co.com.crediya.solicitudes.model.solicitud.model.commons;
+package co.com.crediya.solicitudes.model.solicitud;
 
 import lombok.Value;
 
