@@ -6,15 +6,13 @@ import co.com.crediya.solicitudes.model.solicitud.PagedResult;
 import co.com.crediya.solicitudes.model.solicitud.Solicitud;
 import co.com.crediya.solicitudes.model.solicitud.gateways.SolicitudRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
-@Slf4j
+
 @RequiredArgsConstructor
 public class ListSolicitudesPendientesUseCase {
 
     private final SolicitudRepository repository;
-
 
 
     public Mono<PagedResult<Solicitud>> execute(FiltroSolicitud filtro, PageQuery page) {
@@ -26,8 +24,11 @@ public class ListSolicitudesPendientesUseCase {
                 page.isAsc()
         );
         return repository.listarPendientes(filtro, safe)
-                .doOnSubscribe(s -> log.trace("Listar pendientes filtro={} page={}", filtro, safe))
-                .doOnSuccess(p -> log.debug("OK {} items (total={})", p.getItems().size(), p.getTotal()))
-                .doOnError(e -> log.error("Error listando pendientes: {}", e.getMessage(), e));
+                .doOnSubscribe(s -> System.out.println(
+                        "Listar pendientes filtro=" + filtro + " page=" + safe))
+                .doOnSuccess(p -> System.out.println(
+                        "OK " + p.getItems().size() + " items (total=" + p.getTotal() + ")"))
+                .doOnError(e -> System.out.println(
+                        "Error listando pendientes: " + e.getMessage()));
     }
-}
+    }
