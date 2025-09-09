@@ -44,7 +44,7 @@ public class SolicitudHandler {
      * @return {@link ServerResponse} con estado 201 Created y datos de la solicitud creada.
      */
     public Mono<ServerResponse> registrar(ServerRequest request) {
-        System.out.println("Solicitud para crear una nueva solicitud recibida");
+       log.info("Solicitud para crear una nueva solicitud recibida");
 
         return request.bodyToMono(RegistrarSolicitudRequest.class)
                 .doOnNext(dto -> System.out.println("Payload recibido: " + dto))

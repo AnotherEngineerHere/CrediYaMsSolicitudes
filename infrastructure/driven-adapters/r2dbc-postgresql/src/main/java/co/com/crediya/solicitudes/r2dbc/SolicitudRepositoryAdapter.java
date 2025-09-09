@@ -38,7 +38,6 @@ public class SolicitudRepositoryAdapter implements SolicitudRepository {
 
         return repository.save(entity)
                 .map(saved -> {
-                    // Devolvemos la solicitud original con el ID asignado (conserva campos no persistidos como documentoIdentidad)
                     return solicitud.toBuilder()
                             .idSolicitud(saved.getId() == null ? null : Math.toIntExact(saved.getId()))
                             .build();
@@ -73,7 +72,6 @@ public class SolicitudRepositoryAdapter implements SolicitudRepository {
 
     @SuppressWarnings("unused")
     private static Solicitud toDomain(SolicitudEntity e) {
-        // Reconstrucción mínima (sin joins)
         Estado estado = null;
         if (e.getIdEstado() != null) {
             EstadoTipo tipo = null;
