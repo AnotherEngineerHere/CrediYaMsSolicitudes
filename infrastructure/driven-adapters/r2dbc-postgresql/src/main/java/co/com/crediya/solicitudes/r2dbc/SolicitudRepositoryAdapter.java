@@ -2,6 +2,9 @@ package co.com.crediya.solicitudes.r2dbc;
 
 import co.com.crediya.solicitudes.model.estados.Estado;
 import co.com.crediya.solicitudes.model.enums.EstadoTipo;
+import co.com.crediya.solicitudes.model.solicitud.FiltroSolicitud;
+import co.com.crediya.solicitudes.model.solicitud.PageQuery;
+import co.com.crediya.solicitudes.model.solicitud.PagedResult;
 import co.com.crediya.solicitudes.model.solicitud.Solicitud;
 import co.com.crediya.solicitudes.model.solicitud.gateways.SolicitudRepository;
 import co.com.crediya.solicitudes.model.tipoprestamo.TipoPrestamo;
@@ -22,6 +25,10 @@ public class SolicitudRepositoryAdapter implements SolicitudRepository {
         this.repository = repository;
     }
 
+    @Override
+    public Mono<PagedResult<Solicitud>> listarPendientes(FiltroSolicitud filtro, PageQuery page) {
+        return repository.listarPendientes(filtro,page);
+    }
     @Override
     public Mono<Solicitud> save(Solicitud solicitud) {
         if (solicitud == null) {
