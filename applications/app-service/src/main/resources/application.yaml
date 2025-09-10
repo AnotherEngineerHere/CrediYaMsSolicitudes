@@ -31,3 +31,6 @@ app:
   jwt:
     secret: "d1UqRjMSI9She0oFsvhG/PIV1A/NN1Ke9RTohM/vVfE55Kle3Defav4aNLH01O7ocomXcnwXAAKqur8bg7CHdA=="
     issuer: "crediya-auth"
+services:
+  auth:
+    url: http://localhost:8081/api/v1

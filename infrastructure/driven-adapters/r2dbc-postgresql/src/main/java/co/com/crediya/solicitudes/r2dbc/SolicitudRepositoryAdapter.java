@@ -70,35 +70,4 @@ public class SolicitudRepositoryAdapter implements SolicitudRepository {
                 .build();
     }
 
-    @SuppressWarnings("unused")
-    private static Solicitud toDomain(SolicitudEntity e) {
-        Estado estado = null;
-        if (e.getIdEstado() != null) {
-            EstadoTipo tipo = null;
-            for (EstadoTipo t : EstadoTipo.values()) {
-                if (t.getId() == Math.toIntExact(e.getIdEstado())) { tipo = t; break; }
-            }
-            estado = Estado.builder()
-                    .idEstado(e.getIdEstado().intValue())
-                    .tipo(tipo)
-                    .descripcion(tipo != null ? tipo.getDescripcion() : null)
-                    .build();
-        }
-
-        TipoPrestamo tp = null;
-        if (e.getIdTipoPrestamo() != null) {
-            tp = TipoPrestamo.builder()
-                    .idTipoPrestamo(Math.toIntExact(e.getIdTipoPrestamo()))
-                    .build();
-        }
-
-        return Solicitud.builder()
-                .idSolicitud(e.getId() == null ? null : Math.toIntExact(e.getId()))
-                .monto(e.getMonto())
-                .plazo(e.getPlazo())
-                .email(e.getEmail())
-                .estado(estado)
-                .tipoPrestamo(tp)
-                .build();
-    }
 }

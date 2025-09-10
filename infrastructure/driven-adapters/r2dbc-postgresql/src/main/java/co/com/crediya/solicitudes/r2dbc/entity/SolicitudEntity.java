@@ -37,4 +37,7 @@ public class SolicitudEntity {
     // FK a core.tipo_prestamo(id_tipo_prestamo)
     @Column("id_tipo_prestamo")
     private Long idTipoPrestamo;
+
+    @Column("documento_identidad")
+    private String documentoIdentidad;
 }

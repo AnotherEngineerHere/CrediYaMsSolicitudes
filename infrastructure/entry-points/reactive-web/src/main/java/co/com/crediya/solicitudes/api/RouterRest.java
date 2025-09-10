@@ -14,6 +14,7 @@ public class RouterRest {
     @Bean
     public RouterFunction<ServerResponse> routerFunction(SolicitudHandler handler) {
         return route(POST("/api/v1/solicitud"), handler::registrar)
-                .andRoute(GET("apl/v1/solicitud"),handler::listar);
+                .andRoute(GET("/api/v1/solicitud/pendientes"), handler::listar)
+                .andRoute(GET("/api/v1/solicitudes/revision"), handler::listarRevision);
     }
 }

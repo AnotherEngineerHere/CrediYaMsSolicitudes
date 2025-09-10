@@ -4,7 +4,9 @@ import co.com.crediya.solicitudes.api.dto.*;
 import co.com.crediya.solicitudes.model.excepciones.*;
 import co.com.crediya.solicitudes.model.solicitud.FiltroSolicitud;
 import co.com.crediya.solicitudes.model.solicitud.PageQuery;
+import co.com.crediya.solicitudes.model.solicitud.SolicitudRevision;
 import co.com.crediya.solicitudes.usecase.solicitud.ListSolicitudesPendientesUseCase;
+import co.com.crediya.solicitudes.usecase.solicitud.ListSolicitudesRevisionUseCase;
 import co.com.crediya.solicitudes.usecase.solicitud.SolicitudUseCase;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -32,9 +34,8 @@ import java.util.Map;
 public class SolicitudHandler {
 
     private final SolicitudUseCase solicitudUseCase;
-
-
     private final ListSolicitudesPendientesUseCase useCase;
+    private final ListSolicitudesRevisionUseCase listSolicitudesRevisionUseCase;
 
     private static final Logger log = LoggerFactory.getLogger(SolicitudHandler.class);
     /**
@@ -139,5 +140,38 @@ public class SolicitudHandler {
     private static int qpi(ServerRequest r, String k, int d) {
         try { return Integer.parseInt(r.queryParam(k).orElse(String.valueOf(d))); }
         catch (Exception e) { return d; }
+    }
+
+    public Mono<ServerResponse> listarRevision(ServerRequest req) {
+        int page = qpi(req, "page", 0);
+        int size = qpi(req, "size", 20);
+        String sort = req.queryParam("sort").orElse("id_solicitud");
+        boolean asc = !"desc".equalsIgnoreCase(req.queryParam("dir").orElse("asc"));
+
+        var filtro = FiltroSolicitud.builder()
+                .email(req.queryParam("email").orElse(null))
+                .nombre(req.queryParam("nombre").orElse(null))
+                .tipoPrestamo(req.queryParam("tipo_prestamo").orElse(null))
+                .minMonto(req.queryParam("min_monto").map(BigDecimal::new).orElse(null))
+                .maxMonto(req.queryParam("max_monto").map(BigDecimal::new).orElse(null))
+                .build();
+
+        var pageQ = new PageQuery(page, size, sort, asc);
+
+        return listSolicitudesRevisionUseCase.execute(filtro, pageQ)
+                .map(p -> PagedResponseDTO.<SolicitudRevisionDTO>builder()
+                        .items(p.getItems().stream().map(SolicitudRevisionMapper::toDto).toList())
+                        .total(p.getTotal()).page(p.getPage()).size(p.getSize()).build())
+                .flatMap(body -> ServerResponse.ok().contentType(MediaType.APPLICATION_JSON).bodyValue(body))
+                .onErrorResume(IllegalArgumentException.class,
+                        e -> ServerResponse.badRequest().contentType(MediaType.APPLICATION_JSON)
+                                .bodyValue(ErrorResponse.of("BAD_REQUEST", e.getMessage())))
+                .onErrorResume(e -> {
+                    log.error("Error no controlado en listado de revision: {}", e.getMessage(), e);
+                    return ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .bodyValue(ErrorResponse.of("ERROR_INTERNO",
+                                    "Ocurrió un error inesperado. Contacte con el administrador."));
+                });
     }
 }
