@@ -19,7 +19,7 @@ public class RestConsumer implements UsuarioRepository {
     @Override
     public Mono<Usuario> findByDocumentoIdentidad(String documentoIdentidad) {
         return webClient.get()
-                .uri("/usuarios/documento/{documentoIdentidad}", documentoIdentidad)
+                .uri("/api/v1/usuarios/documento/{documentoIdentidad}", documentoIdentidad)
                 .retrieve()
                 .bodyToMono(Usuario.class);
     }
