@@ -1,0 +1,42 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: crediya-postgres
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      # Datos persistentes
+      - ./db/data:/var/lib/postgresql/data
+      # Script de inicialización (tu SQL de un solo esquema)
+      - ./db/init/schema.sql:/docker-entrypoint-initdb.d/001_schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  pgadmin:
+    image: dpage/pgadmin4:8
+    container_name: crediya-pgadmin
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "${PGADMIN_PORT}:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  solicitudes:
+    build: .
+    container_name: crediya-solicitudes
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "8082:8082"
+    depends_on:
+      postgres:
+        condition: service_healthy
