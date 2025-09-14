@@ -18,19 +18,25 @@ cors:
   allowed-origins: "http://localhost:4200,http://localhost:8080"
 adapters:
   r2dbc:
-    host: ${APP_DB_HOST}
-    port: ${APP_DB_PORT}
-    database: ${APP_DB_NAME}
-    schema: core
-    username: ${APP_DB_USER}
-    password: ${APP_DB_PASSWORD}
+    host: localhost
+    port: 5432
+    database: crediya
+    schema: auth
+    username: admin
+    password: admin123
 logging:
   level:
-    org.springframework.data.r2dbc: DEBUG
+    org.springframework.data.r2dbc: INFO
+    org.springframework.r2dbc.core: INFO
+    io.r2dbc.postgresql.QUERY: INFO
+    io.r2dbc.postgresql.PARAM: INFO
+    io.r2dbc.pool: WARN
+    co.com.crediya: INFO
+    root: INFO
 app:
   jwt:
     secret: "d1UqRjMSI9She0oFsvhG/PIV1A/NN1Ke9RTohM/vVfE55Kle3Defav4aNLH01O7ocomXcnwXAAKqur8bg7CHdA=="
     issuer: "crediya-auth"
 services:
   auth:
-    url: ${SERVICES_AUTH_URL}
+    url: http://localhost:8081/api/v1/usuarios/

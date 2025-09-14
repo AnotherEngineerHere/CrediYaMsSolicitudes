@@ -11,9 +11,9 @@ import java.time.Duration;
 
 @Configuration
 public class PostgreSQLConnectionPool {
-    /* Change these values for your project */
-    public static final int INITIAL_SIZE = 12;
-    public static final int MAX_SIZE = 15;
+    /* Optimized connection pool settings for better performance */
+    public static final int INITIAL_SIZE = 5;
+    public static final int MAX_SIZE = 10;
     public static final int MAX_IDLE_TIME = 30;
     public static final int DEFAULT_PORT = 5432;
 

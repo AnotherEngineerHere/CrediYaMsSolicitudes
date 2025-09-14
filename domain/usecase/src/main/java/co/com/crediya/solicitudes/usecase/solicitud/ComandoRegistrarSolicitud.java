@@ -12,6 +12,6 @@ public class ComandoRegistrarSolicitud {
     private String documentoIdentidad;
     private String email;
     private BigDecimal monto;
-    private Integer plazo;            // en meses
-    private Integer idTipoPrestamo;   // referencia al tipo de préstamo
+    private Integer plazo;
+    private Integer idTipoPrestamo;
 }
