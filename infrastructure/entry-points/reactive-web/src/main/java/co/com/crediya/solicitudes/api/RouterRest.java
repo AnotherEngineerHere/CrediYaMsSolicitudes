@@ -20,6 +20,8 @@ import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
+import co.com.crediya.solicitudes.api.UserHandler;
+
 import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
 import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
@@ -161,7 +163,6 @@ public class RouterRest {
     })
     public RouterFunction<ServerResponse> routerFunction(SolicitudHandler handler) {
         return route(POST("/api/v1/solicitud"), handler::registrar)
-                .andRoute(GET("/api/v1/solicitud/pendientes"), handler::listar)
-                .andRoute(GET("/api/v1/solicitud"), handler::listarParaRevision);
+                .andRoute(GET("/api/v1/solicitud/pendientes"), handler::listarParaRevision);
     }
 }

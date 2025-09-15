@@ -56,7 +56,7 @@ class SolicitudHandlerTest {
         // Given
         var solicitud = createTestSolicitud();
         var pagedResult = createPagedResult(List.of(solicitud));
-        var userData = new UserDataDTO("test@example.com", "Juan Pérez", 5000000L);
+        var userData = new UserDataDTO("test@example.com", "Juan Pérez", 5000000L, "ASESOR");
 
         when(listSolicitudesPendientesUseCase.execute(any(FiltroSolicitud.class), any(PageQuery.class)))
                 .thenReturn(Mono.just(pagedResult));
@@ -118,7 +118,7 @@ class SolicitudHandlerTest {
         when(listSolicitudesPendientesUseCase.execute(any(FiltroSolicitud.class), any(PageQuery.class)))
                 .thenReturn(Mono.just(pagedResult));
         when(userService.getUserData(any(String.class)))
-                .thenReturn(Mono.just(new UserDataDTO("test@example.com", "Test User", 3000000L)));
+                .thenReturn(Mono.just(new UserDataDTO("test@example.com", "Test User", 3000000L, "ASESOR")));
 
         // When & Then
         webTestClient.get()
@@ -153,7 +153,7 @@ class SolicitudHandlerTest {
         // Given
         var solicitud = createTestSolicitud();
         var pagedResult = createPagedResult(List.of(solicitud));
-        var userData = new UserDataDTO("test@example.com", "Test User", 4000000L);
+        var userData = new UserDataDTO("test@example.com", "Test User", 4000000L, "ASESOR");
 
         when(listSolicitudesPendientesUseCase.execute(any(FiltroSolicitud.class), any(PageQuery.class)))
                 .thenReturn(Mono.just(pagedResult));

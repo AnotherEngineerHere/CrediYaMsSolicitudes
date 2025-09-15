@@ -5,15 +5,10 @@ import co.com.crediya.solicitudes.model.solicitud.PageQuery;
 import co.com.crediya.solicitudes.model.solicitud.PagedResult;
 import co.com.crediya.solicitudes.model.solicitud.Solicitud;
 import co.com.crediya.solicitudes.model.solicitud.gateways.SolicitudRepository;
-import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
 
-@RequiredArgsConstructor
-public class ListSolicitudesPendientesUseCase {
-
-    private final SolicitudRepository repository;
-
+public record ListSolicitudesPendientesUseCase(SolicitudRepository repository) {
 
     public Mono<PagedResult<Solicitud>> execute(FiltroSolicitud filtro, PageQuery page) {
         int safeSize = Math.min(Math.max(page.getSize(), 1), 200);
@@ -26,9 +21,11 @@ public class ListSolicitudesPendientesUseCase {
         return repository.listarPendientes(filtro, safe)
                 .doOnSubscribe(s -> System.out.println(
                         "Listar pendientes filtro=" + filtro + " page=" + safe))
-                .doOnSuccess(p -> System.out.println(
-                        "OK " + p.getItems().size() + " items (total=" + p.getTotal() + ")"))
+                .doOnSuccess(p -> {
+                    System.out.println("OK " + p.getItems().size() + " items (total=" + p.getTotal() + ")");
+                    p.getItems().forEach(item -> System.out.println("Solicitud: " + item));
+                })
                 .doOnError(e -> System.out.println(
                         "Error listando pendientes: " + e.getMessage()));
     }
-    }
+}

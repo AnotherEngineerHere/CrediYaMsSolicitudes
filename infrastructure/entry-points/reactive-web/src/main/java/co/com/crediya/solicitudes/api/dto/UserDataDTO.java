@@ -14,5 +14,8 @@ public record UserDataDTO(
         String nombre,
 
         @Schema(description = "Salario base del usuario", example = "3000000")
-        Long salarioBase
+        Long salarioBase,
+
+        @Schema(description = "Rol del usuario", example = "ASESOR")
+        Long rol
 ) {}

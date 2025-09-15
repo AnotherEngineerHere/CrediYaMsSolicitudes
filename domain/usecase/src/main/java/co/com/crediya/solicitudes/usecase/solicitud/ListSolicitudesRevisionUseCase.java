@@ -46,7 +46,7 @@ public class ListSolicitudesRevisionUseCase {
                         .plazo(solicitud.getPlazo())
                         .email(solicitud.getEmail())
                         .nombre(usuario.getNombre() + " " + usuario.getApellido())
-                        .tipoPrestamo(solicitud.getTipoPrestamo().getNombre())
+                        .tipoPrestamo(solicitud.getTipoPrestamo().getIdTipoPrestamo()+"")
                         .tasaInteres(solicitud.getTipoPrestamo().getTasaInteres())
                         .estadoSolicitud(solicitud.getEstado().getDescripcion())
                         .salarioBase(usuario.getSalario_base())

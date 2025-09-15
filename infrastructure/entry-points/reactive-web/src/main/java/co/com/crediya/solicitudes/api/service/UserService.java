@@ -24,7 +24,7 @@ public class UserService {
 
     private final WebClient webClient;
 
-    @Value("${autenticaciones.service.url:http://localhost:8081}")
+    @Value("${autenticaciones.service.url:http://localhost:8080}")
     private String autenticacionesServiceUrl;
 
     /**

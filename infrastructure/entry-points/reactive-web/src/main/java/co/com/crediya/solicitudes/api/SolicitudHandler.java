@@ -1,6 +1,10 @@
 package co.com.crediya.solicitudes.api;
 
 import co.com.crediya.solicitudes.api.dto.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import co.com.crediya.solicitudes.api.service.UserService;
 import co.com.crediya.solicitudes.model.enums.EstadoTipo;
 import co.com.crediya.solicitudes.model.excepciones.*;
@@ -67,19 +71,43 @@ public class SolicitudHandler {
      * @throws RuntimeException si ocurre un error durante el procesamiento de la solicitud
      */
     public Mono<ServerResponse> registrar(ServerRequest request) {
-       log.info("Solicitud para crear una nueva solicitud recibida");
+        log.info("Solicitud para crear una nueva solicitud recibida");
 
-        return request.bodyToMono(RegistrarSolicitudRequest.class)
-                .doOnNext(dto -> System.out.println("Payload recibido: " + dto))
-                .map(RegistrarSolicitudRequest::toCommand)
-                .doOnNext(cmd -> System.out.println("Comando mapeado: " + cmd.getEmail()))
-                .flatMap(solicitudUseCase::registrar)
-                .doOnSuccess(saved -> System.out.println("Solicitud guardada exitosamente con id: " + saved.getIdSolicitud()))
-                .flatMap(saved -> {
-                    URI location = URI.create("/api/v1/solicitud/" + saved.getIdSolicitud());
-                    return ServerResponse.created(location)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .bodyValue(SolicitudResponse.fromDomain(saved));
+        return ReactiveSecurityContextHolder.getContext()
+                .map(ctx -> ctx.getAuthentication())
+                .flatMap(auth -> {
+                    // Verifica rol
+                    if (auth.getAuthorities().stream().noneMatch(a -> a.getAuthority().equals("ROLE_SOLICITANTE"))) {
+                        return Mono.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "Requiere rol ROLE_SOLICITANTE"));
+                    }
+
+                    String authEmail = auth.getName();
+
+                    return request.bodyToMono(RegistrarSolicitudRequest.class)
+                            .switchIfEmpty(Mono.error(new ResponseStatusException(
+                                    HttpStatus.BAD_REQUEST, "Se requiere un cuerpo JSON con la solicitud")))
+                            .flatMap(dto -> {
+                                if (dto.getEmail() == null || dto.getEmail().isBlank()) {
+                                    return Mono.error(new ResponseStatusException(
+                                            HttpStatus.BAD_REQUEST, "El email del payload es obligatorio"));
+                                }
+                                if (!authEmail.equals(dto.getEmail())) {
+                                    return Mono.error(new ResponseStatusException(
+                                            HttpStatus.FORBIDDEN, "El email autenticado no coincide con el del payload"));
+                                }
+                                log.info("Payload recibido: {}", dto);
+                                return Mono.just(dto);
+                            })
+                            .map(RegistrarSolicitudRequest::toCommand)
+                            .doOnNext(cmd -> log.info("Comando mapeado: {}", cmd.getEmail()))
+                            .flatMap(solicitudUseCase::registrar)
+                            .doOnSuccess(saved -> log.info("Solicitud guardada exitosamente con id: {}", saved.getIdSolicitud()))
+                            .flatMap(saved -> {
+                                URI location = URI.create("/api/v1/solicitud/" + saved.getIdSolicitud());
+                                return ServerResponse.created(location)
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .bodyValue(SolicitudResponse.fromDomain(saved));
+                            });
                 })
                 // --- Mapeo de excepciones de dominio a respuestas HTTP controladas ---
                 .onErrorResume(TipoPrestamoNoEncontradoException.class, ex ->
@@ -107,15 +135,22 @@ public class SolicitudHandler {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .bodyValue(error("DOMAIN_ERROR", ex.getMessage()))
                 )
+                // Mapea ResponseStatusException a JSON consistente
+                .onErrorResume(ResponseStatusException.class, ex ->
+                        ServerResponse.status(ex.getStatusCode())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .bodyValue(Map.of("error", ex.getReason()))
+                )
                 // --- Fallback genérico (500) ---
                 .onErrorResume(ex -> {
-                    System.out.println("Error al registrar solicitud: " + ex.getMessage());
+                    log.error("Error al registrar solicitud", ex);
                     return ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR)
                             .contentType(MediaType.APPLICATION_JSON)
                             .bodyValue(error("ERROR_INTERNO",
                                     "Ocurrió un error inesperado. Contacte con el administrador."));
                 });
     }
+
 
     /**
      * Maneja la consulta de solicitudes pendientes de revisión.
@@ -138,49 +173,54 @@ public class SolicitudHandler {
     public Mono<ServerResponse> listar(ServerRequest request) {
         log.info("Solicitud para listar solicitudes pendientes recibida");
 
-        // Extraer parámetros de consulta opcionales
-        String pageParam = request.queryParam("page").orElse("0");
-        String sizeParam = request.queryParam("size").orElse("10");
+        return ReactiveSecurityContextHolder.getContext()
+                .map(ctx -> ctx.getAuthentication())
+                .flatMap(auth -> {
+                    String authEmail = auth.getName(); // Assume email is the name
+                    // Extraer parámetros de consulta opcionales
+                    String pageParam = request.queryParam("page").orElse("0");
+                    String sizeParam = request.queryParam("size").orElse("10");
 
-        try {
-            int page = Integer.parseInt(pageParam);
-            int size = Integer.parseInt(sizeParam);
+                    try {
+                        int page = Integer.parseInt(pageParam);
+                        int size = Integer.parseInt(sizeParam);
 
-            // Crear filtro vacío por defecto (puedes expandir con más filtros)
-            FiltroSolicitud filtro = FiltroSolicitud.builder().build();
-            PageQuery pageQuery = new PageQuery(page, size, null, true);
+                        // Crear filtro con email del usuario autenticado
+                        FiltroSolicitud filtro = FiltroSolicitud.builder().email(authEmail).build();
+                        PageQuery pageQuery = new PageQuery(page, size, null, true);
 
-            return useCase.execute(filtro, pageQuery)
-                    .flatMap(pagedResult -> {
-                        // Convertir a DTOs para respuesta
-                        var items = pagedResult.getItems().stream()
-                                .map(SolicitudItemDTO::fromDomain)
-                                .toList();
+                        return useCase.execute(filtro, pageQuery)
+                                .flatMap(pagedResult -> {
+                                    // Convertir a DTOs para respuesta
+                                    var items = pagedResult.getItems().stream()
+                                            .map(SolicitudItemDTO::fromDomain)
+                                            .toList();
 
-                        var response = PagedResponseDTO.<SolicitudItemDTO>builder()
-                                .items(items)
-                                .page(pagedResult.getPage())
-                                .size(pagedResult.getSize())
-                                .total(pagedResult.getTotal())
-                                .build();
+                                    var response = PagedResponseDTO.<SolicitudItemDTO>builder()
+                                            .items(items)
+                                            .page(pagedResult.getPage())
+                                            .size(pagedResult.getSize())
+                                            .total(pagedResult.getTotal())
+                                            .build();
 
-                        return ServerResponse.ok()
+                                    return ServerResponse.ok()
+                                            .contentType(MediaType.APPLICATION_JSON)
+                                            .bodyValue(response);
+                                })
+                                .onErrorResume(ex -> {
+                                    log.error("Error al listar solicitudes pendientes: {}", ex.getMessage());
+                                    return ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                            .contentType(MediaType.APPLICATION_JSON)
+                                            .bodyValue(error("ERROR_INTERNO",
+                                                    "Ocurrió un error al consultar las solicitudes pendientes."));
+                                });
+                    } catch (NumberFormatException ex) {
+                        return ServerResponse.badRequest()
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .bodyValue(response);
-                    })
-                    .onErrorResume(ex -> {
-                        log.error("Error al listar solicitudes pendientes: {}", ex.getMessage());
-                        return ServerResponse.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .bodyValue(error("ERROR_INTERNO",
-                                        "Ocurrió un error al consultar las solicitudes pendientes."));
-                    });
-        } catch (NumberFormatException ex) {
-            return ServerResponse.badRequest()
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .bodyValue(error("PARAMETROS_INVALIDOS",
-                            "Los parámetros 'page' y 'size' deben ser números enteros."));
-        }
+                                .bodyValue(error("PARAMETROS_INVALIDOS",
+                                        "Los parámetros 'page' y 'size' deben ser números enteros."));
+                    }
+                });
     }
 
     /**
@@ -207,7 +247,6 @@ public class SolicitudHandler {
 
             return useCase.execute(filtro, pageQuery)
                     .flatMap(pagedResult -> {
-                        // Filtrar solicitudes que requieren revisión manual
                         List<co.com.crediya.solicitudes.model.solicitud.Solicitud> filteredSolicitudes = pagedResult.getItems().stream()
                                 .filter(solicitud -> {
                                     if (solicitud.getEstado() == null || solicitud.getEstado().getTipo() == null) {
@@ -226,10 +265,9 @@ public class SolicitudHandler {
                                     // Obtener datos del usuario
                                     Mono<co.com.crediya.solicitudes.api.dto.UserDataDTO> userDataMono = userService.getUserData(solicitud.getEmail())
                                             .defaultIfEmpty(new co.com.crediya.solicitudes.api.dto.UserDataDTO(
-                                                    solicitud.getEmail(), "Usuario no encontrado", 0L));
+                                                    solicitud.getEmail(), "Usuario no encontrado", 0L,1L    ));
 
                                     return userDataMono.map(userData -> {
-                                        // Calcular monto mensual aproximado (monto / plazo)
                                         BigDecimal montoMensual = solicitud.getMonto()
                                                 .divide(BigDecimal.valueOf(solicitud.getPlazo()),
                                                         2, BigDecimal.ROUND_HALF_UP);
@@ -239,9 +277,8 @@ public class SolicitudHandler {
                                                 .plazo(solicitud.getPlazo())
                                                 .email(solicitud.getEmail())
                                                 .nombre(userData.nombre())
-                                                .tipoPrestamo(solicitud.getTipoPrestamo() != null ?
-                                                        solicitud.getTipoPrestamo().getNombre() : null)
-                                                .tasaInteres(BigDecimal.valueOf(0.025)) // Tasa por defecto
+                                                .tipoPrestamo(solicitud.getTipoPrestamo().getIdTipoPrestamo()+"")
+                                                .tasaInteres(BigDecimal.valueOf(12.5))
                                                 .estadoSolicitud(solicitud.getEstado() != null ?
                                                         solicitud.getEstado().getTipo().name() : null)
                                                 .salarioBase(userData.salarioBase())

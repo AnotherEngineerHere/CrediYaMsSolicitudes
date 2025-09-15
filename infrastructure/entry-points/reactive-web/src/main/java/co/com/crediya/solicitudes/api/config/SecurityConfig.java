@@ -87,9 +87,8 @@ public class SecurityConfig {
                 .authorizeExchange(ex -> ex
                         .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .pathMatchers(HttpMethod.POST, "/api/v1/solicitud")
-                        .hasAnyRole("ADMIN", "CLIENTE")
-                        .pathMatchers(HttpMethod.GET, "/api/v1/solicitud/pendientes").hasRole("CLIENTE")
-                        .pathMatchers(HttpMethod.GET, "/api/v1/solicitud").hasRole("ASESOR")
+                        .hasAnyRole("ADMIN", "SOLICITANTE")
+                        .pathMatchers(HttpMethod.GET, "/api/v1/solicitud/pendientes").hasRole("ASESOR")
                         .anyExchange().permitAll()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
